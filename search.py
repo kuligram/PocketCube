@@ -1,5 +1,8 @@
-from utils import PriorityQueue 
+from utils import PriorityQueue, is_in
 from collections import deque
+import time
+import config
+import pickle
 
 class Problem(object):
 
@@ -130,10 +133,10 @@ class PocketCubeProblem(Problem):
     2x2x2 cube is represented as a tuple of 7 such cubelet tuples (cubelet #1 is fixed in space)
     
     Action is a right hand rotation (as if closing a lid on a bottle with your right hand)
-    Action 'X' rotates cubelets 2,4,6,8(right 4 cubelets) around the (negative)X direcion by quarter turn,
-    Action 'Y' rotates cubelets 3,4,5,6(front 4 cubelets) around the Y direcion by quarter turn,
-    Action 'Z' rotates cubelets 5,6,7,8(bottom 4 cubelets) around the Z direcion by quarter turn,
-    Action XX is a half turn rotation, action XXX is a negative quarter turn etc.
+    Action 'R' rotates cubelets 2,4,6,8(right 4 cubelets) around the (negative)X direcion by quarter turn,
+    Action 'F' rotates cubelets 3,4,5,6(front 4 cubelets) around the Y direcion by quarter turn,
+    Action 'B' rotates cubelets 5,6,7,8(bottom 4 cubelets) around the Z direcion by quarter turn,
+    Action R2 is a half turn rotation, action R\' is a counter-clockwise quarter turn etc.
     """
     
     def __init__(self, initial, goal):
@@ -144,10 +147,10 @@ class PocketCubeProblem(Problem):
 
     def actions(self, node):
         #the largerst branching ratio but easier branch pruning via the set of explored states and depth checks
-        return ['X','XX','XXX','Y','YY','YYY','Z','ZZ','ZZZ']
+        return ['R','R2','R\'','F','F2','F\'','B','B2','B\'']
         
     def result(self, s, action):
-        if action=='XXX':
+        if action=='R\'':
             return (
                 (s[6][0],s[6][2],s[6][1]),
                 s[1],
@@ -156,9 +159,9 @@ class PocketCubeProblem(Problem):
                 (s[2][0],s[2][2],s[2][1]),
                 s[5],
                 (s[4][0],s[4][2],s[4][1]))
-        if action=="XX":
+        if action=='R2':
             return (s[4],s[1],s[6],s[3],s[0],s[5],s[2])
-        if action=='X':
+        if action=='R':
             return (
                 (s[2][0],s[2][2],s[2][1]),
                 s[1],
@@ -167,7 +170,7 @@ class PocketCubeProblem(Problem):
                 (s[6][0],s[6][2],s[6][1]),
                 s[5],
                 (s[0][0],s[0][2],s[0][1]))
-        if action=='Y':
+        if action=='F':
             return (
                 s[0],
                 (s[3][2],s[3][1],s[3][0]),
@@ -175,9 +178,9 @@ class PocketCubeProblem(Problem):
                 (s[4][2],s[4][1],s[4][0]),
                 (s[2][2],s[2][1],s[2][0]),
                 s[5],s[6])
-        if action=='YY':
+        if action=='F2':
             return (s[0],s[4],s[3],s[2],s[1],s[5],s[6])
-        if action=='YYY':
+        if action=='F\'':
             return (
                 s[0],
                 (s[2][2],s[2][1],s[2][0]),
@@ -185,7 +188,7 @@ class PocketCubeProblem(Problem):
                 (s[1][2],s[1][1],s[1][0]),
                 (s[3][2],s[3][1],s[3][0]),
                 s[5],s[6])
-        if action=='Z':
+        if action=='B':
             return (
                 s[0],
                 s[1],
@@ -194,9 +197,9 @@ class PocketCubeProblem(Problem):
                 (s[3][1],s[3][0],s[3][2]),
                 (s[6][1],s[6][0],s[6][2]),
                 (s[4][1],s[4][0],s[4][2]))
-        if action=='ZZ':
+        if action=='B2':
             return (s[0],s[1],s[2],s[6],s[5],s[4],s[3])
-        if action=='ZZZ':
+        if action=='B\'':
             return (
                 s[0],
                 s[1],
@@ -263,6 +266,54 @@ def breadth_first_graph_search(problem, max_depth=10):
                     
     problem.states_explored=len(explored)
     return None
+
+
+def HprecomputeBFS(problem, max_depth=10):
+    """Precomputes the number of moves needed to solve every state reachable from the goal 
+    to depth max_depth by BFS and returns the dictionary of all those states  """
+    current_depth=0
+    statesAtDepth=1
+    explored = {}
+    node = Node(problem.initial)
+    frontier = deque([node])
+    explored[node.state]=node.depth
+    
+    while frontier:
+        node = frontier.popleft()
+        
+        if node.depth<max_depth:
+            for child in node.expand(problem):
+                if child.depth>current_depth:
+                        print("States explored at depth ",current_depth, " : ",statesAtDepth)
+                        statesAtDepth=0
+                        current_depth+=1
+                        print("BFS is enumerating states at depth= ", current_depth)
+
+                if child.state not in explored:
+                    frontier.append(child)
+                    explored[child.state]=child.depth
+                    statesAtDepth+=1
+                    
+        
+    print("States explored at depth ",current_depth, " : ",statesAtDepth)
+    problem.states_explored=len(explored)
+    return explored
+
+def computePatternDB():
+    print("generating the pattern database heuristic")
+    GoalState=(('g','r','w'),('b','o','w'),('g','o','w'),('b','o','y'),('g','o','y'),('b','r','y'),('g','r','y'))
+    newProblem=PocketCubeProblem(GoalState, GoalState)
+    start = time.time()
+
+    config.table=HprecomputeBFS(newProblem, max_depth=9)
+    config.tableLoaded=1
+    end = time.time()
+    print("Total states enumerated: ", newProblem.states_explored, " in ", end-start, " s")
+    with open('states9.pickle', 'wb') as f:
+       # Pickle the 'data' dictionary using the highest protocol available.
+        print("saving the precomputed heuristic to file 'states9.pickle")
+        pickle.dump(config.table, f, pickle.HIGHEST_PROTOCOL)
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -331,6 +382,14 @@ def MDHeuristic(node, problem):
         value+=translationMD+rotationMD
     return int(value/ 8)+(value % 8 > 0) #rounding up and dividing by 8 to make it consistent
 
+def PatterndDBHeuristic(node, problem):
+    if config.tableLoaded==1:
+        if node.state in config.table:
+            return config.table[node.state]
+        else:
+            return MDHeuristic(node, problem)
+    else:
+        return MDHeuristic(node, problem)
 
 def aStarSearch(problem, max_depth=10, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
