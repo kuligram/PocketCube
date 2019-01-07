@@ -1,4 +1,4 @@
-Finds the shortest (optimal) solution to the 2x2x2 equivalent of Rubik’s cube (Nickols cube) using iterative deepening A* graph search with branch pruning. Solves most cubes in a few seconds on a macbook pro.
+Finds the shortest (optimal) solution to the 2x2x2 equivalent of Rubik’s cube (Nickols cube, Pocket cube) using iterative deepening A* graph search with branch pruning. Solves the most complex states (depth 11) in a few seconds on macbook pro.
 https://en.wikipedia.org/wiki/Pocket_Cube  
 
 Some code snippets were borrowed from this repo:
@@ -10,7 +10,7 @@ download or clone this repo, open a terminal/command window and run the line bel
 To use the Manhattand distance heuristic:    
 python cubeH.py  
   
-To generate and use the ~140M pattern database heuristic:    
+To generate and use the (~140M, depth 9) pattern database heuristic:    
 python cubeDB.py  
   
 References:   

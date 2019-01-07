@@ -33,7 +33,7 @@ if __name__ == '__main__':
     #A* finds the optimal solution faster than BFS
 
     #sol=iterativeDeepeningDFS(newProblem, max_depth=15)
-    sol=iterativeDeepeningA(newProblem, max_depth=16, heuristic=MDHeuristic)
+    sol=iterativeDeepeningA(newProblem, max_depth=11, heuristic=MDHeuristic)
     #sol=depth_first_graph_search(newProblem, max_depth=10)
     #sol=breadth_first_graph_search(newProblem, max_depth=10)
     #sol=aStarSearchPruning(newProblem, max_depth=10,heuristic=MDHeuristic)
@@ -51,7 +51,7 @@ if __name__ == '__main__':
         print(" solution depth: ", sol.depth)
         print("Nodes expanded: ",newProblem.nodes_expanded," states explored: ",newProblem.states_explored, " in ", end-start, " seconds")    
     else: 
-        print("No solution found. Nodes expanded: ",newProblem.nodes_expanded," states explored: ",newProblem.states_explored, " in ", end-start, " seconds")
+        print("No solution found, check initial state. Nodes expanded: ",newProblem.nodes_expanded," states explored: ",newProblem.states_explored, " in ", end-start, " seconds")
 
 
 
