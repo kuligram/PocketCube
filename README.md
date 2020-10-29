@@ -1,3 +1,5 @@
+https://youtu.be/SX-Bk8LDf2k
+
 Finds the shortest (optimal) solution to the 2x2x2 equivalent of Rubik’s cube (Nickols cube, Pocket cube) using iterative deepening A* graph search with branch pruning. Solves the most complex states (depth 11) in a few seconds on macbook pro.
 https://en.wikipedia.org/wiki/Pocket_Cube  
 
